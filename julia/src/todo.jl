@@ -42,7 +42,7 @@ function render_todo_list()
     end
 
     content = WebFramework.div(
-        WebFramework.h1("Dark Todo List") *
+        WebFramework.h1("Julia Todo List") *
         WebFramework.div(
             WebFramework.form(
                 WebFramework.input(type="text", name="todo", placeholder="Enter a new todo", autofocus="true") *
