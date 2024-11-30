@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if ! command -v julia &> /dev/null; then
+    echo "Please install Julia!"
+    exit 1
+fi
+
+julia src/server.jl

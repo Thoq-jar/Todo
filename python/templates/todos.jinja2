@@ -1,0 +1,24 @@
+{% extends "base.jinja2" %}
+
+{% block content %}
+    <form action="{{ url_for('add_todo') }}" method="POST">
+        <input type="text" name="title" placeholder="Enter a new todo" required>
+        <button type="submit">Add Todo</button>
+    </form>
+
+    <div class="todo-list">
+        {% for todo in todos %}
+        <div class="todo-item">
+            <span class="{{ 'completed' if todo.complete else '' }}">
+                {{ todo.title }}
+            </span>
+            <div class="todo-actions">
+                <a href="{{ url_for('complete_todo', index=loop.index0) }}">
+                    {{ '✓' if not todo.complete else '×' }}
+                </a>
+                <a href="{{ url_for('delete_todo', index=loop.index0) }}">🗑️</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
