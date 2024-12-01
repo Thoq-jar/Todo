@@ -1,0 +1,141 @@
+-mod(main).
+-export([main/0]).
+
+% HTML Element Generators
+html_h1(Content) -> "<h1>" ++ Content ++ "</h1>".
+html_h2(Content) -> "<h2>" ++ Content ++ "</h2>".
+html_h3(Content) -> "<h3>" ++ Content ++ "</h3>".
+html_div(Content) -> "<div>" ++ Content ++ "</div>".
+html_p(Content) -> "<p>" ++ Content ++ "</p>".
+html_span(Content) -> "<span>" ++ Content ++ "</span>".
+
+% Block Elements
+html_article(Content) -> "<article>" ++ Content ++ "</article>".
+html_aside(Content) -> "<aside>" ++ Content ++ "</aside>".
+html_blockquote(Content) -> "<blockquote>" ++ Content ++ "</blockquote>".
+html_details(Content) -> "<details>" ++ Content ++ "</details>".
+html_figcaption(Content) -> "<figcaption>" ++ Content ++ "</figcaption>".
+html_figure(Content) -> "<figure>" ++ Content ++ "</figure>".
+html_footer(Content) -> "<footer>" ++ Content ++ "</footer>".
+html_header(Content) -> "<header>" ++ Content ++ "</header>".
+html_main(Content) -> "<main>" ++ Content ++ "</main>".
+html_nav(Content) -> "<nav>" ++ Content ++ "</nav>".
+html_section(Content) -> "<section>" ++ Content ++ "</section>".
+html_summary(Content) -> "<summary>" ++ Content ++ "</summary>".
+html_iframe(Src) -> "<iframe src=\"" ++ Src ++ "\"></iframe>".
+
+% Text Elements
+html_a(Href, Content) -> "<a href=\"" ++ Href ++ "\">" ++ Content ++ "</a>".
+html_abbr(Title, Content) -> "<abbr title=\"" ++ Title ++ "\">" ++ Content ++ "</abbr>".
+html_b(Content) -> "<b>" ++ Content ++ "</b>".
+html_br() -> "<br>".
+html_code(Content) -> "<code>" ++ Content ++ "</code>".
+html_em(Content) -> "<em>" ++ Content ++ "</em>".
+html_i(Content) -> "<i>" ++ Content ++ "</i>".
+html_mark(Content) -> "<mark>" ++ Content ++ "</mark>".
+html_pre(Content) -> "<pre>" ++ Content ++ "</pre>".
+html_strong(Content) -> "<strong>" ++ Content ++ "</strong>".
+html_sub(Content) -> "<sub>" ++ Content ++ "</sub>".
+html_sup(Content) -> "<sup>" ++ Content ++ "</sup>".
+html_time(Content) -> "<time>" ++ Content ++ "</time>".
+
+% List Elements
+html_ul(Content) -> "<ul>" ++ Content ++ "</ul>".
+html_ol(Content) -> "<ol>" ++ Content ++ "</ol>".
+html_li(Content) -> "<li>" ++ Content ++ "</li>".
+html_dl(Content) -> "<dl>" ++ Content ++ "</dl>".
+html_dt(Content) -> "<dt>" ++ Content ++ "</dt>".
+html_dd(Content) -> "<dd>" ++ Content ++ "</dd>".
+
+% Table Elements
+html_table(Content) -> "<table>" ++ Content ++ "</table>".
+html_thead(Content) -> "<thead>" ++ Content ++ "</thead>".
+html_tbody(Content) -> "<tbody>" ++ Content ++ "</tbody>".
+html_tfoot(Content) -> "<tfoot>" ++ Content ++ "</tfoot>".
+html_tr(Content) -> "<tr>" ++ Content ++ "</tr>".
+html_th(Content) -> "<th>" ++ Content ++ "</th>".
+html_td(Content) -> "<td>" ++ Content ++ "</td>".
+
+% Form Elements
+html_form(Action, Method, Content) ->
+    "<form action=\"" ++ Action ++ "\" method=\"" ++ Method ++ "\">" ++ Content ++ "</form>".
+html_input(Type, Name) ->
+    "<input type=\"" ++ Type ++ "\" name=\"" ++ Name ++ "\">".
+html_label(For, Content) ->
+    "<label for=\"" ++ For ++ "\">" ++ Content ++ "</label>".
+html_select(Name, Content) ->
+    "<select name=\"" ++ Name ++ "\">" ++ Content ++ "</select>".
+html_option(Value, Content) ->
+    "<option value=\"" ++ Value ++ "\">" ++ Content ++ "</option>".
+html_textarea(Name, Rows, Cols, Content) ->
+    "<textarea name=\"" ++ Name ++ "\" rows=\"" ++ Rows ++ "\" cols=\"" ++ Cols ++ "\">" ++
+        Content ++ "</textarea>".
+html_button(Type, Content) ->
+    "<button type=\"" ++ Type ++ "\">" ++ Content ++ "</button>".
+
+% Media Elements
+html_audio(Src, Content) ->
+    "<audio src=\"" ++ Src ++ "\">" ++ Content ++ "</audio>".
+html_img(Src, Alt) ->
+    "<img src=\"" ++ Src ++ "\" alt=\"" ++ Alt ++ "\">".
+html_video(Src, Content) ->
+    "<video src=\"" ++ Src ++ "\">" ++ Content ++ "</video>".
+
+% Semantic Elements
+html_address(Content) -> "<address>" ++ Content ++ "</address>".
+html_cite(Content) -> "<cite>" ++ Content ++ "</cite>".
+
+% Server Code
+main() ->
+    Message = os:exec("echo 'Starting server...'"),
+    io:print("~s~n", [Message]),
+    case
+        gen_tcp:listen(8080, [
+            binary,
+            {packet, 0},
+            {active, false},
+            {reuseaddr, true}
+        ])
+    of
+        {ok, Socket} ->
+            Message2 = os:exec("echo 'Server started on port 8080'"),
+            io:print("~s~n", [Message2]),
+            accept_connections(Socket);
+        {error, eaddrinuse} ->
+            Message3 = os:exec("echo 'Port 8080 is already in use'"),
+            io:print("~s~n", [Message3]),
+            halt(1);
+        {error, Reason} ->
+            Message4 = os:exec("echo 'Failed to start server: " ++ Reason ++ "'"),
+            io:print("~s~n", [Message4]),
+            halt(1)
+    end.
+
+accept_connections(Socket) ->
+    case gen_tcp:accept(Socket) of
+        {ok, Client} ->
+            handle_client(Client),
+            accept_connections(Socket);
+        {error, Reason} ->
+            Message = os:exec("echo 'Accept failed: " ++ Reason ++ "'"),
+            io:print("~s~n", [Message]),
+            gen_tcp:close(Socket)
+    end.
+
+handle_client(Socket) ->
+    case gen_tcp:recv(Socket, 0) of
+        {ok, _Data} ->
+            Response = create_response(),
+            gen_tcp:send(Socket, Response),
+            gen_tcp:close(Socket);
+        {error, closed} ->
+            ok
+    end.
+
+create_response() ->
+    Headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n",
+    Content = html_div(
+        html_iframe("https://www.example.com")
+    ),
+    Body = "<html><body>" ++ Content ++ "</body></html>",
+    list_to_binary(Headers ++ Body).
